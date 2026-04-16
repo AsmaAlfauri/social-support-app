@@ -17,23 +17,16 @@ export default function Wizard() {
   } = useWizard();
 
   const StepComponent = steps.find((s) => s.id === step)?.component;
-
   const t = translations[language];
 
   const [saved, setSaved] = useState(false);
 
-  // fake "saved locally" indicator (replaceable later with real debounce save)
   useEffect(() => {
     setSaved(true);
-
-    const timer = setTimeout(() => {
-      setSaved(false);
-    }, 1200);
-
+    const timer = setTimeout(() => setSaved(false), 1200);
     return () => clearTimeout(timer);
   }, [step]);
 
-  // SUCCESS SCREEN
   if (submitted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
@@ -87,33 +80,42 @@ export default function Wizard() {
           </div>
         </div>
 
+        {/* PROGRESS BAR */}
+        <div className="flex items-center mb-6">
+          {steps.map((s, index) => (
+            <div key={s.id} className="flex items-center flex-1">
+              
+              {/* circle */}
+              <div
+                className={`w-8 h-8 flex items-center justify-center rounded-full text-sm font-semibold
+                ${
+                  step === s.id
+                    ? "bg-blue-600 text-white"
+                    : step > s.id
+                    ? "bg-green-500 text-white"
+                    : "bg-gray-300 text-gray-600"
+                }`}
+              >
+                {s.id}
+              </div>
+
+              {/* line */}
+              {index !== steps.length - 1 && (
+                <div
+                  className={`h-1 flex-1 mx-2 rounded
+                  ${step > s.id ? "bg-green-500" : "bg-gray-300"}`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+
         {/* SAVED INDICATOR */}
         {saved && (
           <p className="text-xs text-green-600" aria-live="polite">
             Saved locally
           </p>
         )}
-
-        {/* PROGRESS (CLICKABLE STEPS) */}
-        <div className="flex gap-2">
-          {steps.map((s) => (
-            <button
-              key={s.id}
-              onClick={() => setStepSafe(s.id)}
-              className={`w-8 h-8 rounded-full text-sm transition
-                ${
-                  step === s.id
-                    ? "bg-blue-600 text-white"
-                    : step > s.id
-                    ? "bg-green-500 text-white"
-                    : "bg-gray-300 text-gray-700"
-                }`}
-              aria-label={`Go to step ${s.id}`}
-            >
-              {s.id}
-            </button>
-          ))}
-        </div>
 
         {/* CONTENT */}
         <div className="min-h-[300px]">
