@@ -1,5 +1,8 @@
+"use client";
+
 import { useForm } from "react-hook-form";
 import { useWizard } from "@/store/wizard.context";
+import { translations } from "@/lib/translations";
 
 type FormData = {
   name: string;
@@ -8,7 +11,8 @@ type FormData = {
 };
 
 export default function Step1() {
-  const { nextStep, data, setData } = useWizard();
+  const { nextStep, data, setData, language } = useWizard();
+  const t = translations[language];
 
   const {
     register,
@@ -20,56 +24,46 @@ export default function Step1() {
 
   const onSubmit = (formData: FormData) => {
     setData(formData);
-    nextStep(true);
+    nextStep();
   };
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <h3 className="font-semibold mb-4">Personal Information</h3>
+      <h3 className="font-semibold mb-4">
+        {language === "ar" ? "المعلومات الشخصية" : "Personal Information"}
+      </h3>
 
       <input
-        {...register("name", { required: "Name is required" })}
+        {...register("name", { required: "Required" })}
+        placeholder={language === "ar" ? "الاسم" : "Name"}
         className="border p-2 w-full mb-2"
-        placeholder="Name"
       />
-      {errors.name && (
-        <p className="text-red-500 text-sm mb-2">{errors.name.message}</p>
-      )}
+      {errors.name && <p className="text-red-500 text-sm">Required</p>}
 
       <input
-        {...register("nationalId", {
-          required: "National ID is required",
-        })}
+        {...register("nationalId", { required: "Required" })}
+        placeholder={language === "ar" ? "الرقم الوطني" : "National ID"}
         className="border p-2 w-full mb-2"
-        placeholder="National ID"
       />
       {errors.nationalId && (
-        <p className="text-red-500 text-sm mb-2">{errors.nationalId.message}</p>
+        <p className="text-red-500 text-sm">Required</p>
       )}
 
       <input
         {...register("email", {
-          required: "Email is required",
-          pattern: {
-            value: /\S+@\S+\.\S+/,
-            message: "Invalid email format",
-          },
+          required: "Required",
+          pattern: { value: /\S+@\S+\.\S+/, message: "Invalid" },
         })}
-        className="border p-2 w-full mb-2"
         placeholder="Email"
+        className="border p-2 w-full mb-2"
       />
       {errors.email && (
-        <p className="text-red-500 text-sm mb-2">{errors.email.message}</p>
+        <p className="text-red-500 text-sm">{errors.email.message}</p>
       )}
 
-      <div className="pt-4">
-        <button
-          type="submit"
-          className="w-full px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Next
-        </button>
-      </div>
+      <button className="w-full px-4 py-2 bg-blue-600 text-white rounded">
+        Next
+      </button>
     </form>
   );
 }

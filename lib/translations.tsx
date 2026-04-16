@@ -1,0 +1,31 @@
+export const translations = {
+  en: {
+    title: "Social Support Application",
+    step: "Step",
+    of: "of",
+    back: "Back",
+    reset: "Reset Application",
+    helpMeWrite: "Help Me Write",
+    accept: "Accept",
+    edit: "Edit",
+    discard: "Discard",
+    submit: "Submit Application",
+    generating: "Generating...",
+    success: "Application Submitted Successfully 🎉",
+  },
+
+  ar: {
+    title: "طلب دعم اجتماعي",
+    step: "الخطوة",
+    of: "من",
+    back: "رجوع",
+    reset: "إعادة التعيين",
+    helpMeWrite: "ساعدني بالكتابة",
+    accept: "قبول",
+    edit:"تعديل",
+    discard: "رفض",
+    submit: "إرسال الطلب",
+    generating: "جاري الإنشاء...",
+    success: "تم إرسال الطلب بنجاح 🎉",
+  },
+};
