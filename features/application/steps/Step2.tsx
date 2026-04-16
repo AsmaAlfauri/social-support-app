@@ -27,33 +27,72 @@ export default function Step2() {
     nextStep();
   };
 
+  const inputClass =
+    "w-full border rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-blue-500";
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <h3 className="font-semibold mb-4">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+
+      <h3 className="font-semibold text-lg">
         {language === "ar" ? "المعلومات المالية" : "Financial Information"}
       </h3>
 
-      <input
-        {...register("income", { required: "Required" })}
-        placeholder={language === "ar" ? "الدخل الشهري" : "Monthly Income"}
-        className="border p-2 w-full mb-2"
-      />
-      {errors.income && <p className="text-red-500 text-sm">Required</p>}
+      {/* INCOME */}
+      <div>
+        <label className="text-sm mb-1 block">
+          {language === "ar" ? "الدخل الشهري" : "Monthly Income"}
+        </label>
 
-      <input
-        {...register("employmentStatus", { required: "Required" })}
-        placeholder={language === "ar" ? "حالة العمل" : "Employment Status"}
-        className="border p-2 w-full mb-2"
-      />
+        <input
+          {...register("income", { required: true })}
+          className={inputClass}
+        />
 
-      <input
-        {...register("housingStatus", { required: "Required" })}
-        placeholder={language === "ar" ? "السكن" : "Housing Status"}
-        className="border p-2 w-full mb-2"
-      />
+        {errors.income && (
+          <p className="text-red-500 text-sm mt-1">
+            {language === "ar" ? "مطلوب" : "Required"}
+          </p>
+        )}
+      </div>
 
-      <button className="w-full px-4 py-2 bg-blue-600 text-white rounded">
-        Next
+      {/* EMPLOYMENT */}
+      <div>
+        <label className="text-sm mb-1 block">
+          {language === "ar" ? "حالة العمل" : "Employment Status"}
+        </label>
+
+        <input
+          {...register("employmentStatus", { required: true })}
+          className={inputClass}
+        />
+
+        {errors.employmentStatus && (
+          <p className="text-red-500 text-sm mt-1">
+            {language === "ar" ? "مطلوب" : "Required"}
+          </p>
+        )}
+      </div>
+
+      {/* HOUSING */}
+      <div>
+        <label className="text-sm mb-1 block">
+          {language === "ar" ? "السكن" : "Housing Status"}
+        </label>
+
+        <input
+          {...register("housingStatus", { required: true })}
+          className={inputClass}
+        />
+
+        {errors.housingStatus && (
+          <p className="text-red-500 text-sm mt-1">
+            {language === "ar" ? "مطلوب" : "Required"}
+          </p>
+        )}
+      </div>
+
+      <button className="w-full py-3 bg-blue-600 text-white rounded-lg active:scale-[0.99] transition">
+        {language === "ar" ? "التالي" : "Next"}
       </button>
     </form>
   );

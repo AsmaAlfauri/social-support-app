@@ -2,7 +2,7 @@
 
 import { useForm } from "react-hook-form";
 import { useWizard } from "@/store/wizard.context";
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { generateHelpText } from "@/services/ai";
 import { translations } from "@/lib/translations";
 
@@ -13,138 +13,200 @@ type FormData = {
 };
 
 export default function Step3() {
-  const { nextStep, data, setData, setSubmitted, language } = useWizard();
+  const { setData, setSubmitted, language } = useWizard();
   const t = translations[language];
 
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: data,
-  });
+  const { register, handleSubmit, setValue, getValues } =
+    useForm<FormData>();
 
   const [loading, setLoading] = useState(false);
-  const [showPopup, setShowPopup] = useState(false);
-  const [editableText, setEditableText] = useState("");
+  const [popup, setPopup] = useState(false);
+  const [text, setText] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
-  const onSubmit = async (formData: FormData) => {
-    setData(formData);
-    await new Promise((r) => setTimeout(r, 800));
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
-    setSubmitted(true);
-    nextStep();
-  };
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setPopup(false);
+    };
+
+    if (popup) window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [popup]);
 
   const handleAI = async () => {
     setLoading(true);
+    setError(null);
 
     try {
-      const text = await generateHelpText("financial hardship");
-      setEditableText(text);
-      setShowPopup(true);
+      const userData = getValues();
+
+      const prompt = `
+You are a professional social support case worker.
+
+Write ONE professional financial hardship paragraph.
+
+Rules:
+- 80–130 words
+- Human and realistic
+- No placeholders
+- No bullet points
+- No letter format
+
+User:
+Financial: ${userData.financialSituation || "not provided"}
+Employment: ${userData.employmentCircumstances || "not provided"}
+Reason: ${userData.reasonForApplying || "not provided"}
+
+Return ONLY paragraph.
+      `;
+
+      const res = await generateHelpText(prompt);
+
+      if (!res) throw new Error("Empty response");
+
+      setText(res);
+      setPopup(true);
+    } catch {
+      setError(language === "ar"
+        ? "فشل توليد النص"
+        : "AI generation failed");
     } finally {
       setLoading(false);
     }
   };
 
+  const applyToField = (field: keyof FormData) => {
+    setValue(field, text, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+
+  const onSubmit = async (data: FormData) => {
+    setData(data);
+    await new Promise((r) => setTimeout(r, 500));
+    setSubmitted(true);
+  };
+
   return (
-    <div className="relative">
-      {/* AI */}
+    <div className="w-full max-w-2xl mx-auto space-y-4">
+
+      {/* AI BUTTON */}
       <button
         type="button"
         onClick={handleAI}
         disabled={loading}
-        className="mb-4 px-4 py-2 bg-purple-600 text-white rounded"
+        aria-busy={loading}
+        className="w-full sm:w-auto bg-purple-600 text-white py-3 px-4 rounded-lg disabled:opacity-50"
       >
         {loading ? t.generating : t.helpMeWrite}
       </button>
 
-      {/* POPUP */}
-      {showPopup && (
-        <div className="absolute top-0 left-0 w-full bg-white border p-4 rounded shadow z-10">
-          {/* TEXT AREA (preview/edit) */}
-          <textarea
-            value={editableText}
-            onChange={(e) => setEditableText(e.target.value)}
-            className="w-full border p-2 h-32 mb-3"
-          />
-
-          {/* ACTIONS */}
-          <div className="flex gap-2">
-            {/* ACCEPT */}
-            <button
-              type="button"
-              onClick={() => {
-                setValue("financialSituation", editableText, {
-                  shouldValidate: true,
-                  shouldDirty: true,
-                });
-                setShowPopup(false);
-              }}
-              className="px-3 py-1 bg-green-600 text-white rounded"
-            >
-              {t.accept}
-            </button>
-
-            {/* EDIT */}
-            <button
-              type="button"
-              onClick={() => {
-                const el = document.querySelector(
-                  "textarea",
-                ) as HTMLTextAreaElement | null;
-
-                el?.focus();
-              }}
-              className="px-3 py-1 bg-blue-600 text-white rounded"
-            >
-              {t.edit}
-            </button>
-
-            {/* DISCARD */}
-            <button
-              type="button"
-              onClick={() => {
-                setEditableText("");
-                setShowPopup(false);
-              }}
-              className="px-3 py-1 bg-gray-400 text-white rounded"
-            >
-              {t.discard}
-            </button>
-          </div>
-        </div>
+      {/* ERROR */}
+      {error && (
+        <p role="alert" className="text-red-500 text-sm">
+          {error}
+        </p>
       )}
+
       {/* FORM */}
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <h3 className="font-semibold mb-4">
-          {language === "ar" ? "وصف الحالة" : "Situation Description"}
-        </h3>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
 
         <textarea
           {...register("financialSituation", { required: true })}
-          className="border p-2 w-full mb-2"
-          placeholder={
-            language === "ar" ? "الوضع المالي" : "Financial Situation"
-          }
+          className="w-full border p-3 rounded min-h-[110px]"
+          placeholder="Financial Situation"
         />
 
         <textarea
           {...register("employmentCircumstances", { required: true })}
-          className="border p-2 w-full mb-2"
+          className="w-full border p-3 rounded min-h-[110px]"
+          placeholder="Employment Circumstances"
         />
 
         <textarea
           {...register("reasonForApplying", { required: true })}
-          className="border p-2 w-full mb-2"
+          className="w-full border p-3 rounded min-h-[110px]"
+          placeholder="Reason for Applying"
         />
 
-        <button className="w-full px-4 py-2 bg-blue-600 text-white rounded mt-4">
+        <button
+          type="submit"
+          className="w-full bg-blue-600 text-white py-3 rounded-lg"
+        >
           {t.submit}
         </button>
       </form>
+
+      {/* POPUP */}
+      {popup && (
+        <div
+          className="fixed inset-0 bg-black/50 flex items-center justify-center p-4"
+          role="dialog"
+          aria-modal="true"
+        >
+          <div
+            ref={dialogRef}
+            className="w-full max-w-lg bg-white rounded-xl p-4 space-y-3"
+          >
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="w-full border p-3 min-h-[160px] rounded"
+            />
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => applyToField("financialSituation")}
+                className="flex-1 bg-gray-100 py-2 rounded"
+              >
+                Financial
+              </button>
+
+              <button
+                type="button"
+                onClick={() => applyToField("employmentCircumstances")}
+                className="flex-1 bg-gray-100 py-2 rounded"
+              >
+                Employment
+              </button>
+
+              <button
+                type="button"
+                onClick={() => applyToField("reasonForApplying")}
+                className="flex-1 bg-gray-100 py-2 rounded"
+              >
+                Reason
+              </button>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setPopup(false)}
+                className="flex-1 bg-green-600 text-white py-2 rounded"
+              >
+                Accept
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setPopup(false);
+                  setText("");
+                }}
+                className="flex-1 bg-gray-400 text-white py-2 rounded"
+              >
+                Discard
+              </button>
+            </div>
+
+          </div>
+        </div>
+      )}
     </div>
   );
 }

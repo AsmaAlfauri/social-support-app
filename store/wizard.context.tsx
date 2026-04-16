@@ -23,6 +23,9 @@ export type WizardContextType = {
 
   toggleLanguage: () => void;
   reset: () => void;
+
+  canAccessStep: (step: number) => boolean;
+  setStepSafe: (step: number) => void;
 };
 
 const WizardContext = createContext<WizardContextType | null>(null);
@@ -33,32 +36,38 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [submitted, setSubmitted] = useState(false);
   const [language, setLanguage] = useState<"en" | "ar">("en");
 
-  // LOAD
   useEffect(() => {
     const saved = localStorage.getItem("wizard-state");
 
     if (saved) {
       const parsed = JSON.parse(saved);
-
       setStep(parsed.step || 1);
       setDataState(parsed.data || {});
       setSubmitted(parsed.submitted || false);
-      setLanguage(parsed.language || "en"); // 🔥 مهم
+      setLanguage(parsed.language || "en");
     }
   }, []);
 
-  // SAVE
   useEffect(() => {
     localStorage.setItem(
       "wizard-state",
-      JSON.stringify({
-        step,
-        data,
-        submitted,
-        language, 
-      })
+      JSON.stringify({ step, data, submitted, language })
     );
   }, [step, data, submitted, language]);
+
+  const canAccessStep = (target: number) => {
+    if (submitted) return false;
+
+    if (target === 1) return true;
+    if (target === 2) return !!data.name && !!data.email;
+    if (target === 3) return !!data.income;
+
+    return false;
+  };
+
+  const setStepSafe = (target: number) => {
+    if (canAccessStep(target)) setStep(target);
+  };
 
   const nextStep = () => setStep((s) => Math.min(s + 1, 3));
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
@@ -71,13 +80,11 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setStep(1);
     setDataState({});
     setSubmitted(false);
-    setLanguage("en");
     localStorage.removeItem("wizard-state");
   };
 
-  const toggleLanguage = () => {
-    setLanguage((prev) => (prev === "en" ? "ar" : "en"));
-  };
+  const toggleLanguage = () =>
+    setLanguage((p) => (p === "en" ? "ar" : "en"));
 
   return (
     <WizardContext.Provider
@@ -87,12 +94,14 @@ export function WizardProvider({ children }: { children: ReactNode }) {
         submitted,
         language,
         setStep,
+        setStepSafe,
         nextStep,
         prevStep,
         setData,
         setSubmitted,
         reset,
         toggleLanguage,
+        canAccessStep,
       }}
     >
       {children}
