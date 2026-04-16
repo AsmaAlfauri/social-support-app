@@ -33,9 +33,7 @@ export default function Step2() {
         placeholder="Monthly Income"
       />
       {errors.income && (
-        <p className="text-red-500 text-sm mb-2">
-          {errors.income.message}
-        </p>
+        <p className="text-red-500 text-sm mb-2">{errors.income.message}</p>
       )}
 
       <input
@@ -64,12 +62,14 @@ export default function Step2() {
         </p>
       )}
 
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded mt-4"
-      >
-        Next
-      </button>
+      <div className="pt-4">
+        <button
+          type="submit"
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Next
+        </button>
+      </div>
     </form>
   );
 }

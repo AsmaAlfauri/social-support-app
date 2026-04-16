@@ -33,9 +33,7 @@ export default function Step1() {
         placeholder="Name"
       />
       {errors.name && (
-        <p className="text-red-500 text-sm mb-2">
-          {errors.name.message}
-        </p>
+        <p className="text-red-500 text-sm mb-2">{errors.name.message}</p>
       )}
 
       <input
@@ -46,9 +44,7 @@ export default function Step1() {
         placeholder="National ID"
       />
       {errors.nationalId && (
-        <p className="text-red-500 text-sm mb-2">
-          {errors.nationalId.message}
-        </p>
+        <p className="text-red-500 text-sm mb-2">{errors.nationalId.message}</p>
       )}
 
       <input
@@ -63,17 +59,17 @@ export default function Step1() {
         placeholder="Email"
       />
       {errors.email && (
-        <p className="text-red-500 text-sm mb-2">
-          {errors.email.message}
-        </p>
+        <p className="text-red-500 text-sm mb-2">{errors.email.message}</p>
       )}
 
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded mt-4"
-      >
-        Next
-      </button>
+      <div className="pt-4">
+        <button
+          type="submit"
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Next
+        </button>
+      </div>
     </form>
   );
 }

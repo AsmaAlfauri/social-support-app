@@ -1,5 +1,7 @@
 import { useForm } from "react-hook-form";
 import { useWizard } from "@/store/wizard.context";
+import { useState } from "react";
+import { generateHelpText } from "@/services/ai";
 
 type FormData = {
   financialSituation: string;
@@ -23,7 +25,62 @@ export default function Step3() {
     nextStep(true);
   };
 
+  const handleAI = async () => {
+  setLoading(true);
+
+  try {
+    const text = await generateHelpText(
+      "Help me describe financial hardship for social assistance application"
+    );
+
+    setSuggestion(text);
+    setShowPopup(true);
+  } catch (err) {
+    console.error(err);
+  } finally {
+    setLoading(false);
+  }
+};
+  const [loading, setLoading] = useState(false);
+  const [suggestion, setSuggestion] = useState("");
+  const [showPopup, setShowPopup] = useState(false);
+const { setValue } = useForm();
   return (
+    <>
+<button
+  type="button"
+  onClick={handleAI}
+  className="mb-4 px-4 py-2 bg-purple-600 text-white rounded"
+>
+  {loading ? "Generating..." : "Help Me Write"}
+</button>    
+    {showPopup && (
+  <div className="border p-4 mt-4 rounded bg-gray-50">
+    <p className="mb-3">{suggestion}</p>
+
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={() => {
+          setValue("financialSituation", suggestion);
+          setShowPopup(false);
+        }}
+        className="px-3 py-1 bg-green-600 text-white rounded"
+      >
+        Accept
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setShowPopup(false)}
+        className="px-3 py-1 bg-gray-400 text-white rounded"
+      >
+        Discard
+      </button>
+    </div>
+  </div>
+)}
+
     <form onSubmit={handleSubmit(onSubmit)}>
       <h3 className="font-semibold mb-4">Situation Description</h3>
 
@@ -66,12 +123,16 @@ export default function Step3() {
         </p>
       )}
 
-      <button
-        type="submit"
-        className="px-4 py-2 bg-blue-600 text-white rounded mt-4"
-      >
-        Submit
-      </button>
+      <div className="pt-4">
+        <button
+          type="submit"
+          className="w-full px-4 py-2 bg-blue-600 text-white rounded"
+        >
+          Submit
+        </button>
+      </div>
     </form>
+
+    </>
   );
 }
