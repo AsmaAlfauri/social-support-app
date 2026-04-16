@@ -22,18 +22,8 @@ export default function Wizard() {
 
       {/* Navigation */}
       <div className="flex justify-between mt-6">
-        <button
-          onClick={prevStep}
-          className="px-4 py-2 bg-gray-200 rounded"
-        >
+        <button onClick={prevStep} className="px-4 py-2 bg-gray-200 rounded">
           Back
-        </button>
-
-        <button
-          onClick={nextStep}
-          className="px-4 py-2 bg-blue-600 text-white rounded"
-        >
-          Next
         </button>
       </div>
     </div>

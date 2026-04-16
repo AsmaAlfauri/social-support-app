@@ -5,7 +5,7 @@ import { createContext, useContext, useState, ReactNode } from "react";
 type WizardContextType = {
   step: number;
   setStep: (step: number) => void;
-  nextStep: () => void;
+  nextStep: (isValid?: boolean) => void;
   prevStep: () => void;
   data: Record<string, any>;
   setData: (data: Record<string, any>) => void;
@@ -17,7 +17,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
   const [step, setStep] = useState(1);
   const [data, setDataState] = useState<Record<string, any>>({});
 
-  const nextStep = () => setStep((s) => Math.min(s + 1, 3));
+const nextStep = (isValid = true) => {
+  if (!isValid) return;
+  setStep((s) => Math.min(s + 1, 3));
+};
   const prevStep = () => setStep((s) => Math.max(s - 1, 1));
 
   const setData = (newData: Record<string, any>) => {
@@ -40,3 +43,4 @@ export function useWizard() {
   }
   return context;
 }
+
