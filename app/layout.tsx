@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 
 import "./globals.css";
 import { WizardProvider } from "@/store/wizard.context";
+import AppLayout from "@/components/layout/AppLayout";
 
 export const metadata: Metadata = {
   title: "Social support app",
@@ -14,7 +15,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className="min-h-full flex flex-col"> <WizardProvider>{children}</WizardProvider></body>
+      <body className="min-h-full flex flex-col"><WizardProvider><AppLayout>{children}</AppLayout></WizardProvider> </body>
     </html>
   );
 }

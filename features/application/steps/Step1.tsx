@@ -31,46 +31,14 @@ export default function Step1() {
     handleSubmit,
     setValue,
     formState: { errors },
-  } = useForm<FormData>();
+  } = useForm<FormData>({
+    mode: "onSubmit",
+    criteriaMode: "all",
+    shouldFocusError: true,
+  });
 
   /* =========================
-     UAE EMIRATES ID FORMAT
-  ========================= */
-  const formatEmiratesId = (value: string) => {
-    const digits = value.replace(/\D/g, "").slice(0, 15);
-
-    const part1 = digits.slice(0, 3);
-    const part2 = digits.slice(3, 7);
-    const part3 = digits.slice(7, 14);
-    const part4 = digits.slice(14, 15);
-
-    let result = part1;
-    if (part2) result += "-" + part2;
-    if (part3) result += "-" + part3;
-    if (part4) result += "-" + part4;
-
-    return result;
-  };
-
-  const handleEmiratesChange = (e: any) => {
-    setValue("emiratesId", formatEmiratesId(e.target.value));
-  };
-
-  /* =========================
-     PHONE (NUMBERS ONLY - FIXED)
-  ========================= */
-  const handlePhoneChange = (e: any) => {
-    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
-    setValue("phone", digits);
-  };
-
-  const onSubmit = (data: FormData) => {
-    setData({ ...data, country: country?.label || "" });
-    nextStep();
-  };
-
-  /* =========================
-     UI INPUT STYLE (UNIFIED)
+     INPUT STYLE
   ========================= */
   const inputClass =
     "w-full h-[48px] px-4 border border-gray-200 rounded-xl text-sm outline-none " +
@@ -78,19 +46,43 @@ export default function Step1() {
 
   const errorClass = "text-red-500 text-xs mt-1";
 
+  /* =========================
+     EMIRATES ID FORMAT
+  ========================= */
+  const handleEmiratesChange = (e: any) => {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 15);
+
+    let formatted = digits;
+    if (digits.length > 3)
+      formatted = digits.slice(0, 3) + "-" + digits.slice(3);
+    if (digits.length > 7)
+      formatted =
+        digits.slice(0, 3) + "-" + digits.slice(3, 7) + "-" + digits.slice(7);
+
+    setValue("emiratesId", formatted, { shouldValidate: true });
+  };
+
+  /* =========================
+     PHONE FIX (NO BUG)
+  ========================= */
+  const handlePhoneChange = (e: any) => {
+    const digits = e.target.value.replace(/\D/g, "").slice(0, 9);
+    setValue("phone", digits, { shouldValidate: true });
+  };
+
+  const onSubmit = (data: FormData) => {
+    setData({ ...data, country: country?.label || "" });
+    nextStep();
+  };
+
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
 
       {/* HEADER */}
-      <div className="space-y-1">
-        <h2 className="text-xl font-semibold text-gray-900">
+      <div>
+        <h2 className="text-xl font-semibold">
           {isArabic ? "المعلومات الشخصية" : "Personal Information"}
         </h2>
-        <p className="text-sm text-gray-500">
-          {isArabic
-            ? "أدخل بياناتك بدقة لإكمال الطلب"
-            : "Enter your details to continue"}
-        </p>
       </div>
 
       {/* GRID */}
@@ -99,44 +91,53 @@ export default function Step1() {
         {/* NAME */}
         <div>
           <input
-            {...register("name", { required: true, minLength: 3 })}
-            placeholder={isArabic ? "الاسم الكامل" : "Full Name"}
+            {...register("name", {
+              required: "Name is required",
+              minLength: {
+                value: 3,
+                message: "Minimum 3 characters",
+              },
+            })}
+            placeholder="Full Name"
             className={inputClass}
           />
-          {errors.name && <p className={errorClass}>Minimum 3 characters</p>}
+          {errors.name && (
+            <p className={errorClass}>{errors.name.message}</p>
+          )}
         </div>
 
         {/* EMIRATES ID */}
         <div>
           <input
             {...register("emiratesId", {
-              required: true,
-              pattern: /^784-\d{4}-\d{7}-\d$/,
+              required: "Emirates ID required",
+              pattern: {
+                value: /^784-\d{4}-\d{7}-\d$/,
+                message: "Invalid Emirates ID",
+              },
             })}
             onChange={handleEmiratesChange}
             placeholder="784-XXXX-XXXXXXX-X"
             className={inputClass}
           />
           {errors.emiratesId && (
-            <p className={errorClass}>Invalid Emirates ID</p>
+            <p className={errorClass}>{errors.emiratesId.message}</p>
           )}
         </div>
 
         {/* DOB */}
         <input
           type="date"
-          {...register("dob", { required: true })}
+          {...register("dob", { required: "Date of birth required" })}
           className={inputClass}
         />
 
         {/* GENDER */}
         <select
-          {...register("gender", { required: true })}
+          {...register("gender", { required: "Gender required" })}
           className={inputClass}
         >
-          <option value="">
-            {isArabic ? "اختر الجنس" : "Select Gender"}
-          </option>
+          <option value="">Select Gender</option>
           <option>Male</option>
           <option>Female</option>
         </select>
@@ -146,47 +147,39 @@ export default function Step1() {
       <div className="space-y-4">
 
         <input
-          {...register("address", { required: true, minLength: 10 })}
-          placeholder={isArabic ? "العنوان الكامل" : "Full Address"}
+          {...register("address", {
+            required: "Address required",
+            minLength: {
+              value: 10,
+              message: "Minimum 10 characters",
+            },
+          })}
+          placeholder="Full Address"
           className={inputClass}
         />
         {errors.address && (
-          <p className={errorClass}>Address too short</p>
+          <p className={errorClass}>{errors.address.message}</p>
         )}
 
         {/* COUNTRY */}
-        <div>
-          <Select
-            options={countries}
-            value={country}
-            onChange={setCountry}
-            placeholder={isArabic ? "اختر الدولة" : "Select Country"}
-            className="text-sm"
-            styles={{
-              control: (base, state) => ({
-                ...base,
-                borderColor: "#e5e7eb",
-                borderRadius: "12px",
-                minHeight: "48px",
-                boxShadow: state.isFocused
-                  ? "0 0 0 2px rgba(59,130,246,0.2)"
-                  : "none",
-              }),
-            }}
-          />
-        </div>
+        <Select
+          options={countries}
+          value={country}
+          onChange={setCountry}
+          placeholder="Select Country"
+        />
 
         {/* CITY / STATE */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <input
-            {...register("city", { required: true })}
-            placeholder={isArabic ? "المدينة" : "City"}
+            {...register("city", { required: "City required" })}
+            placeholder="City"
             className={inputClass}
           />
 
           <input
-            {...register("state", { required: true })}
-            placeholder={isArabic ? "المنطقة" : "State"}
+            {...register("state", { required: "State required" })}
+            placeholder="State"
             className={inputClass}
           />
         </div>
@@ -197,33 +190,39 @@ export default function Step1() {
 
         <input
           {...register("phone", {
-            required: true,
-            minLength: 7,
-            maxLength: 9,
+            required: "Phone required",
+            minLength: { value: 7, message: "Too short" },
           })}
           onChange={handlePhoneChange}
-          placeholder="Phone (digits only)"
-          inputMode="numeric"
+          placeholder="Phone"
           className={inputClass}
         />
+        {errors.phone && (
+          <p className={errorClass}>{errors.phone.message}</p>
+        )}
 
         <input
           {...register("email", {
-            required: true,
-            pattern: /^\S+@\S+\.\S+$/,
+            required: "Email required",
+            pattern: {
+              value: /^\S+@\S+\.\S+$/,
+              message: "Invalid email",
+            },
           })}
           placeholder="Email"
           className={inputClass}
         />
+        {errors.email && (
+          <p className={errorClass}>{errors.email.message}</p>
+        )}
       </div>
 
       {/* SUBMIT */}
       <button
         type="submit"
-        className="w-full bg-blue-600 text-white py-3 rounded-xl
-                   hover:bg-blue-700 transition"
+        className="w-full bg-blue-600 text-white py-3 rounded-xl"
       >
-        {isArabic ? "التالي" : "Continue"}
+        Continue
       </button>
     </form>
   );

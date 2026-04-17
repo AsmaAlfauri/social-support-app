@@ -4,55 +4,67 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col bg-gray-50">
+    <main className="min-h-screen bg-gray-50">
 
-      {/* HEADER */}
-      <header className="bg-white shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="font-bold text-lg text-blue-600">
-            Social Support Portal
-          </h1>
+      {/* HERO SECTION */}
+      <section className="max-w-6xl mx-auto px-4 py-20 flex flex-col items-center text-center">
 
-          <Link href="/apply">
-            <span className="bg-blue-600 text-white px-4 py-2 rounded cursor-pointer">
-              Apply Now
-            </span>
-          </Link>
-        </div>
-      </header>
 
-      {/* HERO */}
-      <section className="flex-1 flex items-center justify-center text-center px-4">
-        <div className="max-w-2xl space-y-4">
-          <h2 className="text-3xl font-bold">
-            Financial Assistance Application
-          </h2>
+        <h1 className="text-4xl md:text-5xl font-bold text-gray-900 leading-tight">
+          Financial Assistance Made Simple
+        </h1>
 
-          <p className="text-gray-600">
-            Apply for financial support easily and securely. Our system helps
-            you describe your situation with AI assistance.
-          </p>
+        <p className="text-gray-600 mt-4 max-w-xl">
+          Apply for social support in minutes. Our AI assistant helps you
+          describe your situation clearly and professionally.
+        </p>
+
+        <div className="flex gap-4 mt-8">
 
           <Link href="/apply">
-            <span className="inline-block mt-4 bg-blue-600 text-white px-6 py-3 rounded-lg cursor-pointer">
+            <button className="
+              bg-blue-600 text-white px-6 py-3 rounded-xl
+              hover:bg-blue-700 transition
+              active:scale-[0.98]
+            ">
               Start Application
-            </span>
+            </button>
           </Link>
+
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="bg-white border-t mt-10">
-        <div className="max-w-6xl mx-auto px-4 py-6 text-sm text-gray-500 flex flex-col md:flex-row justify-between gap-2">
-          <p>© 2026 Social Support Portal</p>
+      {/* FEATURES */}
+      <section className="max-w-6xl mx-auto px-4 grid md:grid-cols-3 gap-6 pb-20">
 
-          <div className="flex gap-4">
-            <span className="cursor-pointer">Privacy Policy</span>
-            <span className="cursor-pointer">Terms</span>
-            <span className="cursor-pointer">Accessibility</span>
+        {[
+          {
+            title: "Fast Application",
+            desc: "Complete your request in minutes with guided steps."
+          },
+          {
+            title: "AI Assistance",
+            desc: "Smart writing help for your financial situation."
+          },
+          {
+            title: "Secure System",
+            desc: "Your data is encrypted and protected."
+          }
+        ].map((item, i) => (
+          <div
+            key={i}
+            className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition"
+          >
+            <h3 className="font-semibold text-lg mb-2">
+              {item.title}
+            </h3>
+            <p className="text-gray-600 text-sm">
+              {item.desc}
+            </p>
           </div>
-        </div>
-      </footer>
+        ))}
+
+      </section>
 
     </main>
   );
