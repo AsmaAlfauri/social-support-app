@@ -34,19 +34,17 @@ export default function StepActions() {
   const t = useT();
 
   const handleNext = () => {
-    if (step === 2) {
-      document
-        .getElementById("step2-form")
-        ?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+    if (step === 1 || step === 2) {
+      const ok = nextStep();
+      if (!ok) return;
       return;
     }
+
     if (step === 3) {
       document
         .getElementById("step3-form")
         ?.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-      return;
     }
-    nextStep();
   };
 
   const handleBack = () => {
@@ -64,25 +62,17 @@ export default function StepActions() {
   return (
     <div className="flex justify-between items-center mt-10 pt-6 border-t border-gray-100">
 
-      {/* BACK */}
       <button
         onClick={handleBack}
         className="flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 active:scale-[0.98] transition"
       >
         {isFirst ? (
-          <>
-            <HomeIcon />
-            {t("buttons.backHome")}
-          </>
+          <><HomeIcon />{t("buttons.backHome")}</>
         ) : (
-          <>
-            <ChevronLeft />
-            {t("buttons.back")}
-          </>
+          <><span className="rtl:rotate-180 inline-flex"><ChevronLeft /></span>{t("buttons.back")}</>
         )}
       </button>
 
-      {/* NEXT / SUBMIT */}
       <button
         onClick={handleNext}
         className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-semibold transition active:scale-[0.98] ${
@@ -92,15 +82,9 @@ export default function StepActions() {
         }`}
       >
         {isLast ? (
-          <>
-            {t("buttons.submit")}
-            <SendIcon />
-          </>
+          <>{t("buttons.submit")}<SendIcon /></>
         ) : (
-          <>
-            {t("buttons.next")}
-            <ChevronRight />
-          </>
+          <>{t("buttons.next")}<span className="rtl:rotate-180 inline-flex"><ChevronRight /></span></>
         )}
       </button>
 
