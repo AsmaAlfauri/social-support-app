@@ -1,24 +1,17 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { useWizard } from "@/store/wizard.context";
 import { useState } from "react";
 import { generateHelpText } from "@/services/ai";
 import { useT } from "@/i18n/useT";
-import { validateStep3 } from "@/features/application/validation/step3.validation";
 import { useRouter } from "next/navigation";
+import { validateStep3 } from "@/features/application/validation/step3.validation";
 
-type FormData = {
-  financialSituation: string;
-  employmentCircumstances: string;
-  reasonForApplying: string;
-};
+type FieldKey = "financialSituation" | "employmentCircumstances" | "reasonForApplying";
 
 /* ================= SECTION HEADER ================= */
 function SectionHeader({ icon, title, subtitle }: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle?: string;
+  icon: React.ReactNode; title: string; subtitle?: string;
 }) {
   return (
     <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-100">
@@ -59,25 +52,13 @@ const icons = {
 
 /* ================= TEXTAREA FIELD ================= */
 function TextareaField({
-  label,
-  error,
-  fieldKey,
-  placeholder,
-  register,
-  loadingField,
-  onAI,
-  aiError,
-  t,
+  label, error, fieldKey, placeholder, value, onChange,
+  loadingField, onAI, aiError, t,
 }: {
-  label: string;
-  error?: string;
-  fieldKey: keyof FormData;
-  placeholder: string;
-  register: any;
-  loadingField: keyof FormData | null;
-  onAI: (field: keyof FormData) => void;
-  aiError: string | null;
-  t: (key: string) => string;
+  label: string; error?: string; fieldKey: FieldKey; placeholder: string;
+  value: string; onChange: (val: string) => void;
+  loadingField: FieldKey | null; onAI: (field: FieldKey) => void;
+  aiError: string | null; t: (key: string) => string;
 }) {
   const isLoading = loadingField === fieldKey;
 
@@ -88,14 +69,14 @@ function TextareaField({
       </label>
 
       <textarea
-        {...register(fieldKey)}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         className="w-full border border-gray-200 bg-white px-4 py-3 rounded-xl text-sm text-gray-900 placeholder:text-gray-400 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition min-h-[120px] resize-y"
       />
 
       {error && <p className="text-xs text-red-500">{error}</p>}
 
-      {/* AI BUTTON */}
       <button
         type="button"
         onClick={() => onAI(fieldKey)}
@@ -108,96 +89,112 @@ function TextareaField({
             {t("step3.generating")}
           </>
         ) : (
-          <>
-            {icons.sparkle}
-            {t("step3.aiHelp")}
-          </>
+          <>{icons.sparkle}{t("step3.aiHelp")}</>
         )}
       </button>
 
-      {aiError && (
-        <p className="text-xs text-red-500">{aiError}</p>
-      )}
+      {aiError && <p className="text-xs text-red-500">{aiError}</p>}
     </div>
   );
 }
 
 /* ================= STEP 3 ================= */
 export default function Step3() {
-  const { setData, data } = useWizard();
+  const { data, updateField, errors, setData, setError } = useWizard();
   const t = useT();
   const router = useRouter();
 
-  const {
-    register,
-    handleSubmit,
-    getValues,
-    setValue,
-    setError,
-    formState: { errors },
-  } = useForm<FormData>({ defaultValues: data });
-
-  const [loadingField, setLoadingField] = useState<keyof FormData | null>(null);
+  const [loadingField, setLoadingField] = useState<FieldKey | null>(null);
   const [popup, setPopup] = useState(false);
   const [aiText, setAiText] = useState("");
-  const [activeField, setActiveField] = useState<keyof FormData | null>(null);
+  const [activeField, setActiveField] = useState<FieldKey | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
 
   /* ================= AI ================= */
-  const handleAI = async (field: keyof FormData) => {
-    setLoadingField(field);
-    setAiError(null);
+const handleAI = async (field: FieldKey) => {
+  setLoadingField(field);
+  setAiError(null);
 
-    const userData = getValues();
-
-    const fieldLabels: Record<keyof FormData, string> = {
-      financialSituation: "financial situation",
-      employmentCircumstances: "employment circumstances",
-      reasonForApplying: "reason for applying for social support",
-    };
-
-    const prompt = `
-You are a professional case writer helping a citizen apply for government social support.
-Help the user write a clear, formal, and empathetic description of their "${fieldLabels[field]}".
-User's current input: "${userData[field] || "not provided"}"
-Context:
-- Financial situation: ${userData.financialSituation || "not provided"}
-- Employment circumstances: ${userData.employmentCircumstances || "not provided"}
-- Reason for applying: ${userData.reasonForApplying || "not provided"}
-Write ONLY the description for "${fieldLabels[field]}" in a government-appropriate tone.
-Keep it between 3-5 sentences. Do not include any titles or labels.
-    `.trim();
-
-    try {
-      const res = await generateHelpText(prompt);
-      if (res) {
-        setAiText(res);
-        setActiveField(field);
-        setPopup(true);
-      } else {
-        setAiError("No response received. Please try again.");
-      }
-    } catch {
-      setAiError("Failed to connect to AI. Please try again.");
-    } finally {
-      setLoadingField(null);
-    }
+  const fieldLabels: Record<FieldKey, string> = {
+    financialSituation: "current financial situation",
+    employmentCircumstances: "employment circumstances",
+    reasonForApplying: "reason for applying for social support",
   };
+
+  const variations = [
+    "Focus on the emotional and personal impact of the situation.",
+    "Focus on the factual and economic aspects of the situation.",
+    "Focus on the family responsibilities and dependents affected.",
+    "Focus on the urgency and immediate need for assistance.",
+    "Focus on the long-term consequences if support is not provided.",
+  ];
+
+  const randomVariation = variations[Math.floor(Math.random() * variations.length)];
+
+  const prompt = `
+You are a senior government social welfare case writer with 10+ years of experience preparing official support applications.
+
+Your task is to write a professional, formal, and compelling description of the applicant's "${fieldLabels[field]}" for a government social support application.
+
+--- APPLICANT'S INPUT ---
+Field to write: ${fieldLabels[field]}
+Current input: "${data[field] || "not provided"}"
+
+--- CONTEXT ---
+Financial situation: ${data.financialSituation || "not provided"}
+Employment circumstances: ${data.employmentCircumstances || "not provided"}
+Reason for applying: ${data.reasonForApplying || "not provided"}
+
+--- WRITING INSTRUCTIONS ---
+- Write ONLY the description for "${fieldLabels[field]}"
+- ${randomVariation}
+- Use formal, government-appropriate language
+- Be empathetic but professional
+- Write 3-5 sentences
+- Do NOT include titles, labels, bullet points, or headers
+- Do NOT start with "I" — write in third person or passive voice
+- Make it sound authentic and specific, not generic
+- If the input is "not provided", create a realistic description based on context
+  `.trim();
+
+  try {
+    const res = await generateHelpText(prompt);
+    if (res) {
+      setAiText(res);
+      setActiveField(field);
+      setPopup(true);
+    } else {
+      setAiError("No response received. Please try again.");
+    }
+  } catch {
+    setAiError("Failed to connect to AI. Please try again.");
+  } finally {
+    setLoadingField(null);
+  }
+};
 
   const applyToField = () => {
     if (!activeField) return;
-    setValue(activeField, aiText);
+    updateField(activeField, aiText); 
     setPopup(false);
     setAiText("");
   };
 
   /* ================= SUBMIT ================= */
-  const onSubmit = (formData: FormData) => {
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const formData = {
+      financialSituation: data.financialSituation || "",
+      employmentCircumstances: data.employmentCircumstances || "",
+      reasonForApplying: data.reasonForApplying || "",
+    };
+
     const validationErrors = validateStep3(formData);
 
     if (Object.keys(validationErrors).length > 0) {
-      Object.entries(validationErrors).forEach(([key, value]) => {
-        setError(key as keyof FormData, { message: value });
+      Object.entries(validationErrors).forEach(([key, msg]) => {
+        setError(key, msg);
       });
       return;
     }
@@ -208,59 +205,55 @@ Keep it between 3-5 sentences. Do not include any titles or labels.
     router.push("/summary");
   };
 
-  const fields: { key: keyof FormData; icon: React.ReactNode; label: string; placeholder: string }[] = [
+  const fields: { key: FieldKey; icon: React.ReactNode; label: string; placeholder: string }[] = [
     {
       key: "financialSituation",
       icon: icons.money,
       label: t("step3.financialSituation"),
-      placeholder: "Describe your current financial situation...",
+      placeholder: t("step3.financialSituation") + "...",
     },
     {
       key: "employmentCircumstances",
       icon: icons.briefcase,
       label: t("step3.employmentCircumstances"),
-      placeholder: "Describe your employment circumstances...",
+      placeholder: t("step3.employmentCircumstances") + "...",
     },
     {
       key: "reasonForApplying",
       icon: icons.document,
       label: t("step3.reasonForApplying"),
-      placeholder: "Explain your reason for applying...",
+      placeholder: t("step3.reasonForApplying") + "...",
     },
   ];
 
   return (
     <div className="space-y-6">
 
-      <form id="step3-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form id="step3-form" onSubmit={handleSubmit} className="space-y-8">
         {fields.map(({ key, icon, label, placeholder }) => (
           <div key={key}>
             <SectionHeader icon={icon} title={label} />
             <TextareaField
               label={label}
-              error={errors[key]?.message}
+              error={errors[key]}      
               fieldKey={key}
               placeholder={placeholder}
-              register={register}
+              value={data[key] || ""} 
+              onChange={(val) => updateField(key, val)}
               loadingField={loadingField}
               onAI={handleAI}
-              aiError={aiError}
+              aiError={activeField === key ? aiError : null}
               t={t}
             />
           </div>
         ))}
       </form>
 
-      {/* ================= AI POPUP ================= */}
+      {/* AI POPUP */}
       {popup && (
-        <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4"
-          role="dialog"
-          aria-modal="true"
-        >
+        <div className="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 px-4" role="dialog" aria-modal="true">
           <div className="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
 
-            {/* HEADER */}
             <div className="flex items-center gap-3 px-6 py-4 border-b border-gray-100">
               <div className="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
                 {icons.sparkle}
@@ -271,7 +264,6 @@ Keep it between 3-5 sentences. Do not include any titles or labels.
               </div>
             </div>
 
-            {/* BODY */}
             <div className="px-6 py-4">
               <textarea
                 value={aiText}
@@ -280,18 +272,11 @@ Keep it between 3-5 sentences. Do not include any titles or labels.
               />
             </div>
 
-            {/* ACTIONS */}
             <div className="flex gap-3 px-6 pb-6">
-              <button
-                onClick={applyToField}
-                className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl hover:bg-blue-700 transition text-sm font-medium"
-              >
+              <button onClick={applyToField} className="flex-1 bg-blue-600 text-white py-2.5 rounded-xl hover:bg-blue-700 transition text-sm font-medium">
                 {t("buttons.accept")}
               </button>
-              <button
-                onClick={() => setPopup(false)}
-                className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition text-sm font-medium"
-              >
+              <button onClick={() => setPopup(false)} className="flex-1 bg-gray-100 text-gray-700 py-2.5 rounded-xl hover:bg-gray-200 transition text-sm font-medium">
                 {t("buttons.discard")}
               </button>
             </div>
