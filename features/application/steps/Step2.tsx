@@ -1,39 +1,20 @@
 "use client";
 
-import { useForm } from "react-hook-form";
 import { useWizard } from "@/store/wizard.context";
 import { useT } from "@/i18n/useT";
-import { validateStep2 } from "@/features/application/validation/step2.validation";
-
-type FormData = {
-  maritalStatus: string;
-  dependents: string;
-  employmentStatus: string;
-  income: string;
-  housingStatus: string;
-};
 
 /* ================= SELECT ================= */
 function Select({
-  label,
-  error,
-  icon,
-  children,
-  ...props
+  label, error, icon, children, ...props
 }: {
-  label: string;
-  error?: string;
-  icon?: React.ReactNode;
-  children: React.ReactNode;
+  label: string; error?: string; icon?: React.ReactNode; children: React.ReactNode;
 } & React.SelectHTMLAttributes<HTMLSelectElement>) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
-      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-        {label}
-      </label>
+      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">{label}</label>
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <div className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
             {icon}
           </div>
         )}
@@ -44,12 +25,12 @@ function Select({
             text-sm text-gray-900
             focus:border-blue-500 focus:ring-2 focus:ring-blue-100
             outline-none transition appearance-none cursor-pointer
-            ${icon ? "pl-10" : ""}
+            ${icon ? "ps-10" : ""}
           `}
         >
           {children}
         </select>
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
+        <div className="absolute end-3 top-1/2 -translate-y-1/2 pointer-events-none text-gray-400">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
             <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
           </svg>
@@ -60,25 +41,18 @@ function Select({
   );
 }
 
-/* ================= INPUT ================= */
+/* ================= FIELD ================= */
 function Field({
-  label,
-  error,
-  icon,
-  ...props
+  label, error, icon, ...props
 }: {
-  label: string;
-  error?: string;
-  icon?: React.ReactNode;
+  label: string; error?: string; icon?: React.ReactNode;
 } & React.InputHTMLAttributes<HTMLInputElement>) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
-      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
-        {label}
-      </label>
+      <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">{label}</label>
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+          <div className="absolute start-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
             {icon}
           </div>
         )}
@@ -89,7 +63,7 @@ function Field({
             text-sm text-gray-900 placeholder:text-gray-400
             focus:border-blue-500 focus:ring-2 focus:ring-blue-100
             outline-none transition
-            ${icon ? "pl-10" : ""}
+            ${icon ? "ps-10" : ""}
           `}
         />
       </div>
@@ -99,11 +73,7 @@ function Field({
 }
 
 /* ================= SECTION HEADER ================= */
-function SectionHeader({ icon, title, subtitle }: {
-  icon: React.ReactNode;
-  title: string;
-  subtitle?: string;
-}) {
+function SectionHeader({ icon, title, subtitle }: { icon: React.ReactNode; title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
       <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 shrink-0">
@@ -149,58 +119,31 @@ const icons = {
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
     </svg>
   ),
-  finance: (
-    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-    </svg>
-  ),
 };
 
 /* ================= STEP 2 ================= */
 export default function Step2() {
-  const { nextStep, data,updateField, setData } = useWizard();
+  const { data, updateField, errors } = useWizard();
   const t = useT();
 
-  const {
-    register,
-    handleSubmit,
-    setError,
-    formState: { errors },
-  } = useForm<FormData>({
-    defaultValues: data,
-  });
-
-  const onSubmit = (formData: FormData) => {
-    const validationErrors = validateStep2(formData);
-
-    if (Object.keys(validationErrors).length > 0) {
-      Object.entries(validationErrors).forEach(([key, value]) => {
-        setError(key as any, { message: value });
-      });
-      return;
-    }
-
-    setData(formData);
-    nextStep();
-  };
-
   return (
-    <form id="step2-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+    <div className="space-y-8">
 
       {/* ── FAMILY INFO ── */}
       <div>
         <SectionHeader
           icon={icons.family}
-          title={t("form.maritalStatus")}
+          title={t("wizard.titles.2")}
           subtitle={t("wizard.descriptions.2")}
         />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
           <Select
             label={t("form.maritalStatus")}
-            error={errors.maritalStatus?.message}
+            value={data.maritalStatus || ""}
+            onChange={(e) => updateField("maritalStatus", e.target.value)}
+            error={errors.maritalStatus}
             icon={icons.heart}
-            {...register("maritalStatus")}
           >
             <option value="">{t("form.select")}</option>
             <option value="single">{t("form.maritalOptions.single")}</option>
@@ -213,10 +156,12 @@ export default function Step2() {
             label={t("form.dependents")}
             type="number"
             min={0}
-            error={errors.dependents?.message}
+            max={20}
+            placeholder="0"
+            value={data.dependents || ""}
+            onChange={(e) => updateField("dependents", e.target.value)}
+            error={errors.dependents}
             icon={icons.users}
-            {...register("dependents")}
-            onChange={(e) => updateField("number", e.target.value.replace(/[^\d+]/g, ""))}
           />
 
         </div>
@@ -229,9 +174,10 @@ export default function Step2() {
 
           <Select
             label={t("form.employmentStatus")}
-            error={errors.employmentStatus?.message}
+            value={data.employmentStatus || ""}
+            onChange={(e) => updateField("employmentStatus", e.target.value)}
+            error={errors.employmentStatus}
             icon={icons.briefcase}
-            {...register("employmentStatus")}
           >
             <option value="">{t("form.select")}</option>
             <option value="employed">{t("form.employmentOptions.employed")}</option>
@@ -245,11 +191,10 @@ export default function Step2() {
             type="number"
             min={0}
             placeholder="0"
-            error={errors.income?.message}
+            value={data.income || ""}
+            onChange={(e) => updateField("income", e.target.value)}
+            error={errors.income}
             icon={icons.money}
-            {...register("income")}
-            onChange={(e) => updateField("number", e.target.value)}
-
           />
 
         </div>
@@ -258,24 +203,22 @@ export default function Step2() {
       {/* ── HOUSING ── */}
       <div>
         <SectionHeader icon={icons.home} title={t("form.housingStatus")} />
-        <div className="grid grid-cols-1 gap-5">
 
-          <Select
-            label={t("form.housingStatus")}
-            error={errors.housingStatus?.message}
-            icon={icons.home}
-            {...register("housingStatus")}
-          >
-            <option value="">{t("form.select")}</option>
-            <option value="owned">{t("form.housingOptions.owned")}</option>
-            <option value="rented">{t("form.housingOptions.rented")}</option>
-            <option value="family">{t("form.housingOptions.family")}</option>
-            <option value="other">{t("form.housingOptions.other")}</option>
-          </Select>
-
-        </div>
+        <Select
+          label={t("form.housingStatus")}
+          value={data.housingStatus || ""}
+          onChange={(e) => updateField("housingStatus", e.target.value)}
+          error={errors.housingStatus}
+          icon={icons.home}
+        >
+          <option value="">{t("form.select")}</option>
+          <option value="owned">{t("form.housingOptions.owned")}</option>
+          <option value="rented">{t("form.housingOptions.rented")}</option>
+          <option value="family">{t("form.housingOptions.family")}</option>
+          <option value="other">{t("form.housingOptions.other")}</option>
+        </Select>
       </div>
 
-    </form>
+    </div>
   );
 }

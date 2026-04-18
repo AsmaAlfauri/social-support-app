@@ -34,9 +34,6 @@ export default function Home() {
               {t.home.start}
             </button>
           </Link>
-          <a href="#features" className="text-sm text-gray-500 hover:text-gray-700 transition px-4 py-3">
-            Learn more →
-          </a>
         </div>
 
       </section>
