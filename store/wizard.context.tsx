@@ -10,16 +10,20 @@ import {
 
 import { validateStep } from "@/features/application/validation";
 
-type Errors = Record<string, string>;
+/* ================= TYPES ================= */
+
+export type WizardData = Record<string, string>;
+
+export type Errors = Record<string, string>;
 
 type WizardContextType = {
   step: number;
-  data: Record<string, any>;
+  data: WizardData;
   errors: Errors;
   language: "en" | "ar";
 
-  setData: (data: Record<string, any>) => void;
-  updateField: (key: string, value: any) => void;
+  setData: (data: WizardData) => void;
+  updateField: (key: string, value: string) => void;
 
   nextStep: () => boolean;
   prevStep: () => void;
@@ -31,14 +35,17 @@ type WizardContextType = {
   reset: () => void;
 };
 
+/* ================= CONTEXT ================= */
+
 const WizardContext = createContext<WizardContextType | null>(null);
+
+/* ================= PROVIDER ================= */
 
 export function WizardProvider({ children }: { children: ReactNode }) {
   const [step, setStep] = useState(1);
-  const [data, setDataState] = useState<Record<string, any>>({});
+  const [data, setDataState] = useState<WizardData>({});
   const [errors, setErrors] = useState<Errors>({});
   const [language, setLanguage] = useState<"en" | "ar">("en");
-
 
   const [touched, setTouched] = useState<Record<string, boolean>>({});
 
@@ -61,68 +68,93 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     localStorage.setItem("wizard", JSON.stringify({ data, step }));
   }, [data, step]);
 
-  /* ================= UPDATE FIELD (real-time) ================= */
-  const updateField = (key: string, value: any) => {
-    const newData = { ...data, [key]: value };
+  /* ================= UPDATE FIELD ================= */
+  const updateField = (key: string, value: string) => {
+    const newData = {
+      ...data,
+      [key]: value,
+    };
+
     setDataState(newData);
 
-
-    setTouched((prev) => ({ ...prev, [key]: true }));
-
+    setTouched((prev) => ({
+      ...prev,
+      [key]: true,
+    }));
 
     const allErrors = validateStep(step, newData);
 
     setErrors((prev) => {
-      const copy = { ...prev };
-      if (!allErrors[key]) {
+      const copy: Errors = { ...prev };
+
+      const errorKey = key as keyof typeof allErrors;
+
+      if (!allErrors[errorKey]) {
         delete copy[key];
       } else {
-        copy[key] = allErrors[key];
+        copy[key] = allErrors[errorKey];
       }
+
       return copy;
     });
   };
 
-  const setData = (newData: Record<string, any>) => {
-    setDataState((prev) => ({ ...prev, ...newData }));
+  /* ================= SET DATA ================= */
+  const setData = (newData: WizardData) => {
+    setDataState((prev) => ({
+      ...prev,
+      ...newData,
+    }));
   };
 
-  /* ================= NAVIGATION ================= */
+  /* ================= NEXT STEP ================= */
   const nextStep = () => {
     const result = validateStep(step, data);
+
     setErrors(result);
 
+    const allTouched = Object.keys(result).reduce((acc, key) => {
+      acc[key] = true;
+      return acc;
+    }, {} as Record<string, boolean>);
 
-    const allTouched = Object.keys(result).reduce(
-      (acc, key) => ({ ...acc, [key]: true }),
-      {}
-    );
-    setTouched((prev) => ({ ...prev, ...allTouched }));
+    setTouched((prev) => ({
+      ...prev,
+      ...allTouched,
+    }));
 
     if (Object.keys(result).length > 0) return false;
 
     setStep((s) => Math.min(s + 1, 3));
     setTouched({});
     setErrors({});
+
     return true;
   };
 
+  /* ================= PREV STEP ================= */
   const prevStep = () => {
     setErrors({});
     setTouched({});
     setStep((s) => Math.max(s - 1, 1));
   };
 
+  /* ================= ERROR HANDLING ================= */
   const setError = (key: string, message: string) => {
-    setErrors((prev) => ({ ...prev, [key]: message }));
+    setErrors((prev) => ({
+      ...prev,
+      [key]: message,
+    }));
   };
 
   const clearErrors = () => setErrors({});
 
+  /* ================= LANGUAGE ================= */
   const toggleLanguage = () => {
     setLanguage((p) => (p === "en" ? "ar" : "en"));
   };
 
+  /* ================= RESET ================= */
   const reset = () => {
     setStep(1);
     setDataState({});
@@ -152,6 +184,8 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     </WizardContext.Provider>
   );
 }
+
+/* ================= HOOK ================= */
 
 export function useWizard() {
   const ctx = useContext(WizardContext);

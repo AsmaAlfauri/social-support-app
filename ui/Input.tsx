@@ -1,18 +1,37 @@
-export default function Input({ label, error, required, icon, ...props }: any) {
+import React from "react";
+
+type InputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  label?: string;
+  error?: string;
+  required?: boolean;
+  icon?: React.ReactNode;
+};
+
+export default function Input({
+  label,
+  error,
+  required,
+  icon,
+  ...props
+}: InputProps) {
   return (
     <div className="flex flex-col gap-1.5 w-full">
+
       {label && (
         <label className="text-xs font-medium text-gray-400 uppercase tracking-wide">
           {label}
           {required && <span className="text-red-400 ml-1">*</span>}
         </label>
       )}
+
       <div className="relative">
+
         {icon && (
           <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
             {icon}
           </div>
         )}
+
         <input
           {...props}
           className={`
@@ -23,8 +42,13 @@ export default function Input({ label, error, required, icon, ...props }: any) {
             ${icon ? "pl-10" : ""}
           `}
         />
+
       </div>
-      {error && <p className="text-xs text-red-500">{error}</p>}
+
+      {error && (
+        <p className="text-xs text-red-500">{error}</p>
+      )}
+
     </div>
   );
 }
