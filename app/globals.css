@@ -2,11 +2,14 @@
 .error {
   @apply text-red-500 text-xs mt-1;
 }
-.input {
-  @apply w-full border border-gray-200
-  bg-white px-4 py-3 rounded-xl
-  text-sm
-  focus:outline-none focus:ring-2 focus:ring-blue-100
-  focus:border-blue-300
-  transition;
+
+
+/* RTL Arabic Font */
+:lang(ar) {
+  font-family: 'Segoe UI', 'Arial', sans-serif;
+}
+
+/* Smooth direction transition */
+* {
+  transition: none;
 }
